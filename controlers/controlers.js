@@ -1,6 +1,5 @@
 
-const { fetchContacts, fetchContact } = require('../services/services.js')
-const { v4: uuidv4 } = require('uuid');
+const { fetchContacts, fetchContact, fetchCreateContact, deleteContactById, updateContact} = require('../services/services.js')
 const Joi = require('joi');
 const fs = require('fs').promises;
 
@@ -25,20 +24,16 @@ const getAllContacts = async (req, res, next) => {
 
 const getContact = async (req, res, next) => {
   const contactId = req.params.contactId;
-  try {
-      const data = await fetchContact(contactId)
-      res.json(data)
-    /*const items = JSON.parse(data)
-    const item = items.find(user => user.id===contactId)
-    if (!item) {
-      res
-        .status(404)
-        .json('Not found')
-    } else {
-      res
-        .status(200)
-        .send(`id: ${item.id} \t name: ${item.name} \t email: ${item.email} \t phone: ${item.phone}`)
-    }*/
+    try {
+        const data = await fetchContact(contactId)
+        if (!data) {
+            res.status(400)
+                .json(`contact id = ${contactId} was not found`)
+        }
+        else {
+            res.json(data)
+            console.log(data)
+        }
   } catch (err) {
     console.error(err);
     next(err);
@@ -53,18 +48,15 @@ const postContact = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
     const user= {
-      "id": uuidv4(),
-            "name": name,
-            "email": email,
-            "phone": phone
+            name,
+            email,
+            phone
     }
     try {
-    const data = await fs.readFile('./contacts.json', 'utf8');
-    const items = JSON.parse(data)
-    items.push(user)
-    await fs.writeFile('./contacts.json', JSON.stringify(items, null, 2), 'utf8');
-    res.status(201)
-    .json(`contact id = ${user.id} was created`)
+        const data = await fetchCreateContact(user);
+        console.log(data)
+        res.status(201)
+        .json(`contact id = ${data._id} was created`)
      } catch (err) {
         console.error(err);
         next(err);
@@ -74,21 +66,16 @@ const postContact = async (req, res, next) => {
 const deleteContact = async (req, res, next) => {
    const contactId = req.params.contactId;
   try {
-    const data = await fs.readFile('./contacts.json', 'utf8');
-    const contactsData = JSON.parse(data)
-    const item = contactsData.find(find => find.id === contactId)
-    if (!item) {
-      res
-        .status(404)
-        .json("contact not found")
-      return
-    }
-    const updatedContacts = contactsData.filter(found => found.id !== contactId)
-    await fs.writeFile('./contacts.json', JSON.stringify(updatedContacts, null, 2), 'utf8');
-    console.log(updatedContacts)
+      const data = await deleteContactById(contactId);
+      if (!data) {
+        res.status(400)
+        .json(`contact id = ${contactId} was not found`)  
+      }
+      else {
     res
       .status(200)
-    .json(`contact id = ${contactId} was deleted`)
+      .json(`contact id = ${contactId} was deleted`)
+          }
   } catch (err) {
     console.error(err);
     next(err);
@@ -97,37 +84,34 @@ const deleteContact = async (req, res, next) => {
 }
 
 const putContact = async (req, res, next) => {
-  const { contactId } = req.params
-  const { name, email, phone } = req.body
+  const { contactId } = req.params;
+  const { name, email, phone } = req.body;
   const { error } = putSchema.validate({ name, email, phone });
+
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
 
-  try {
-    const data = await fs.readFile('./contacts.json', 'utf8');
-    const items = JSON.parse(data)
-    const item = items.find(contact => contact.id == contactId)
-    const index = items.findIndex(contact=>contact.id == contactId)
+  const fields = {
+    name, 
+    email,
+    phone
+  };
 
-    if (item) {
-       contact = {
-        "id": contactId,
-         "name": name || item.name,
-          "email": email || item.email,
-          "phone": phone || item.phone
-      }
-      items[index]=contact
+  try {
+    const data = await updateContact(contactId, fields);
+
+    if (data) {
+      res.status(200).json({ message: `Contact id = ${contactId} was updated` });
+    } else {
+      res.status(404).json({ message: `Contact id = ${contactId} wasn't found` });
     }
-    await fs.writeFile('./contacts.json', JSON.stringify(items, null, 2), 'utf8');
-    res.status(201)
-    .json(`contact id = ${contactId} was updated`)
   } catch (err) {
     console.error(err);
     next(err);
   }
-  
-}
+};
+
 
 module.exports = {
     getAllContacts, 

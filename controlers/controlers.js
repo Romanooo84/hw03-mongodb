@@ -54,7 +54,6 @@ const postContact = async (req, res, next) => {
     }
     try {
         const data = await fetchCreateContact(user);
-        console.log(data)
         res.status(201)
         .json(`contact id = ${data._id} was created`)
      } catch (err) {
@@ -112,11 +111,34 @@ const putContact = async (req, res, next) => {
   }
 };
 
+const putFavourite = async (req, res, next) => {
+  const { contactId } = req.params;
+  const { favorite } = req.body;
+  console.log(req.body)
+
+  const fields = {
+    favorite: true
+  }
+  try {
+    const data = await updateContact(contactId, fields);
+
+    if (data) {
+      res.status(200).json({ message: `Contact id = ${contactId} was updated` });
+    } else {
+      res.status(404).json({ message: `Contact id = ${contactId} wasn't found` });
+    }
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+};
+
 
 module.exports = {
     getAllContacts, 
     getContact,
     postContact, 
     deleteContact,
-    putContact
+    putContact,
+    putFavourite
 }

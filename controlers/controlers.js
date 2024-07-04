@@ -1,7 +1,9 @@
 
 const { fetchContacts, fetchContact, fetchCreateContact, deleteContactById, updateContact} = require('../services/services.js')
 const Joi = require('joi');
-const fs = require('fs').promises;
+const { Users } = require('../models/models.js')
+require('dotenv').config()
+const jwt = require('jsonwebtoken')
 
 const postSchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
@@ -133,6 +135,61 @@ const putFavourite = async (req, res, next) => {
   }
 };
 
+const signup = async (req, res, next) => {
+  const { email, password } = req.body;
+
+    try {
+        const user = await Users.findOne({ email }).lean();
+
+        if (user) {
+            return res.status(409).json({ message: 'This email already exists' });
+        }
+
+        // dorobić walidację
+        const newUser = new Users({ email });
+        await newUser.setPassword(password);
+        await newUser.save();
+
+        return res.status(201).json({ message: 'Created' });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const login = async (req, res, next) => {
+  const { email, password } = req.body;
+  const user = await Users.findOne({ email })
+  console.log(user)
+  
+  if (!user){
+    return res.status(401)
+               .json({message: "User not found"})
+  }
+
+  const isPasswordCorrect = await user.validatePassword(password)
+  console.log(isPasswordCorrect); // Wyświetlenie wyniku sprawdzenia poprawności hasła
+
+const pass = await console.log(password)
+
+
+  if (isPasswordCorrect) {
+      const payload = {
+        id: user._id,
+        
+    }
+    const token = jwt.sign(
+      payload,
+      process.env.SECRET,
+      {expiresIn: '12h'}
+    )
+    return res.json({token})
+  } else {
+    return res.status(401)
+              .json({message: "Wrong password"})
+  }
+  
+}
+
 
 module.exports = {
     getAllContacts, 
@@ -140,5 +197,7 @@ module.exports = {
     postContact, 
     deleteContact,
     putContact,
-    putFavourite
+    putFavourite, 
+    signup,
+    login
 }

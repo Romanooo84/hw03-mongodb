@@ -1,4 +1,4 @@
-const Contact = require('../models/models.js')
+const { Contact }  = require('../models/models.js')
 
 const fetchContacts = () => {
     return Contact.find() 

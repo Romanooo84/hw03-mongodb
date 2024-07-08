@@ -18,7 +18,7 @@ const contactsSchema = new mongoose.Schema({
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'user',
+      ref: 'User',
     }
    }, {
       versionKey: false,
@@ -48,11 +48,14 @@ const userSchema = new mongoose.Schema({
 
 userSchema.methods.setPassword = async function (password) {
   this.password = await bCrypt.hash(password, 10)
-  
 }
 
 userSchema.methods.validatePassword = async function (password) {
     return await bCrypt.compare(password, this.password);
+}
+
+userSchema.methods.setToken = async function (token) {
+  this.token = token
 }
     
 const Contact = mongoose.model('contact', contactsSchema, 'contacts');

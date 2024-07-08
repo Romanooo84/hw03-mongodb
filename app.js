@@ -2,6 +2,8 @@ const express = require('express')
 const logger = require('morgan')
 const cors = require('cors')
 require('dotenv').config()
+const setJWTStrategy = require('./config/jwt')
+const authMiddleware = require ('./middleware/jwt.js')
 
 const contactsRouter = require('./routes/api/contacts')
 const authRouter = require('./routes/api/authRouter')
@@ -16,7 +18,9 @@ app.use(logger('combined'))
 app.use(cors(corsOptions))
 app.use(express.json())
 
-app.use('/api/contacts', contactsRouter)
+setJWTStrategy()
+
+app.use('/api/contacts', authMiddleware, contactsRouter)
 app.use('/api/users', authRouter)
  
 app.use((req, res) => {

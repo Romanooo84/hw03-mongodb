@@ -1,7 +1,7 @@
 const { Contact }  = require('../models/models.js')
 
-const fetchContacts = () => {
-    return Contact.find() 
+const fetchContacts = (id) => {
+    return Contact.find({owner: id}) 
 }
 
 const fetchContact = (id) => {
@@ -10,8 +10,8 @@ const fetchContact = (id) => {
     })
 }
 
-const fetchCreateContact = ({ name, phone, email, favourite }) => {
-    return Contact.create({ name, phone, email, favourite })
+const fetchCreateContact = ({ name, phone, email, favourite, owner }) => {
+    return Contact.create({ name, phone, email, favourite, owner })
 }
 
 const deleteContactById = (id) => {

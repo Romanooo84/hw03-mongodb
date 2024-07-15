@@ -18,7 +18,7 @@ const startServer = async () => {
     console.log('DB Connected')
   }
   catch (err) {
-    console.log(e)
+    console.log(err)
   }
 }
 

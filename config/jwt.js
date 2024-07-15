@@ -22,7 +22,7 @@ const setJWTStrategy = () => {
 
                     if (!user) {
                         return done(new Error('User not found'))
-                    } else if (user.token !== 'logedin') {
+                    } else if (user.token == null) {
                         return done(new Error('Plese log in'))
                     }
 

@@ -25,14 +25,8 @@ const signUpSchema = Joi.object({
 
 const getAllContacts = async (req, res, next) => {
 
-    const accessToken = req.headers.authorization
+  const accessToken = req.headers.authorization
   
-  if (!accessToken) {
-    return res.status(401
-      .json({ message: "Access token is required" })
-    )
-  }
-
   const splitToken = accessToken.split(' ')[1]
 
   jwt.verify(splitToken, process.env.SECRET, async (err, decodedToken) => {
@@ -207,12 +201,17 @@ const signup = async (req, res, next) => {
             return res.status(409).json({ message: 'This email already exists' });
         }
 
-        // dorobić walidację
         const newUser = new Users({ email });
         await newUser.setPassword(password);
         await newUser.save();
 
-        return res.status(201).json({ message: 'Created' });
+      return res.status(201).json(
+        {
+          "user": {
+            "email": email,
+            "subscription": "starter"
+            }
+        });
     } catch (e) {
         next(e);
     }
@@ -242,7 +241,7 @@ const login = async (req, res, next) => {
     const accsesstoken = jwt.sign(
       payload,
       process.env.SECRET,
-      {expiresIn: '60000s'}
+      {expiresIn: '60s'}
     )
 
     const refreshToken = jwt.sign(
@@ -251,7 +250,7 @@ const login = async (req, res, next) => {
       {expiresIn: '30d'}
     )
 
-    await user.setToken('logedin');
+    await user.setToken(refreshToken);
     await user.save();
 
     return res.json({accsesstoken, refreshToken})
@@ -334,7 +333,7 @@ const logout = (req, res) => {
                 .json({message: "User not found"})
     }
 
-    await user.setToken("logedout");
+    await user.setToken(null);
     await user.save();
    
 

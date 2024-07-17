@@ -292,16 +292,16 @@ const refresh = (req, res) => {
     const accsesstoken = jwt.sign(
       payload,
       process.env.SECRET,
-      {expiresIn: '20s'}
+      {expiresIn: '2d'}
     )
 
 
 
-    const newRefreshToken = jwt.sign(
+    /*const newRefreshToken = jwt.sign(
       payload,
       process.env.REFRESH_TOKEN_SECRET,
       {expiresIn: '30d'}
-    )
+    )*/
 
     return res.json({
       acessToken: accsesstoken,

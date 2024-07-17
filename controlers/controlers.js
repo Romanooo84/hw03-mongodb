@@ -241,7 +241,7 @@ const login = async (req, res, next) => {
     const accsesstoken = jwt.sign(
       payload,
       process.env.SECRET,
-      {expiresIn: '60s'}
+      {expiresIn: '2d'}
     )
 
     const refreshToken = jwt.sign(

@@ -8,7 +8,7 @@ router.post('/signup', signup);
 
 router.post('/login', login)
 
-router.post('/refresh-token', refresh)
+router.post('/refresh-token',authMiddleware, refresh)
 
 router.post('/logout', logout)
 

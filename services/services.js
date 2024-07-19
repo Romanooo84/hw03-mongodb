@@ -1,4 +1,4 @@
-const { Contact }  = require('../models/models.js')
+const { Contact, Users }  = require('../models/models.js')
 
 const fetchContacts = (id) => {
     return Contact.find({owner: id}) 
@@ -28,10 +28,19 @@ const updateContact = (id, fields) => {
   );
 };
 
+const updateUser = (id, fields) => {
+       return Users.findOneAndUpdate(
+    { _id: id },
+    { $set: fields },
+    { new: true }
+  );
+}
+
 module.exports = {
     fetchContacts,
     fetchContact, 
     fetchCreateContact,
     deleteContactById,
-    updateContact
+    updateContact, 
+    updateUser
 }

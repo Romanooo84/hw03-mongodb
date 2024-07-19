@@ -16,6 +16,8 @@ router.put('/:contactId', putContact)
 
 router.put('/:contactId/favorite', putFavourite)
 
-router.get('/page/:pageNumber', page )
+router.get('/page/:pageNumber', page)
+
+
 
 module.exports = router

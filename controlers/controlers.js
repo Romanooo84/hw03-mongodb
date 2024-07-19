@@ -1,10 +1,14 @@
 
-const { fetchContacts, fetchContact, fetchCreateContact, deleteContactById, updateContact} = require('../services/services.js')
+const { fetchContacts, fetchContact, fetchCreateContact, deleteContactById, updateContact, updateUser} = require('../services/services.js')
 const Joi = require('joi');
 const { Users, Contact } = require('../models/models.js')
 require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const passport = require('passport');
+const gravatar = require('gravatar')
+const Jimp = require("jimp");
+const path = require('path');
+
 
 const postSchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
@@ -167,7 +171,6 @@ const putContact = async (req, res, next) => {
 
 const putFavourite = async (req, res, next) => {
   const { contactId } = req.params;
-  const { favorite } = req.body;
 
   const fields = {
     favorite: true
@@ -199,10 +202,14 @@ const signup = async (req, res, next) => {
 
         if (user) {
             return res.status(409).json({ message: 'This email already exists' });
-        }
+      }
+      
+      const url = gravatar.url(`${email}`, { s: '200', r: 'pg', d: '404' })
+      console.log(url)
 
         const newUser = new Users({ email });
         await newUser.setPassword(password);
+        await newUser.setAvatar(url)
         await newUser.save();
 
       return res.status(201).json(
@@ -386,6 +393,54 @@ const page = async (req, res) => {
   }
 }
 
+const uploadAvatar = async (req, res, next) => {
+   if (!req.file) {
+        return res.status(400).json({message:'File is not an image'})
+  }
+  const newFileName = req.file.filename
+  const tempDir = path.join(process.cwd(), './public/temp');
+  const filePath = path.join(tempDir, newFileName);
+  const storeImageDir = path.join(process.cwd(), './public/avatars');
+  const newFilePath = path.join(storeImageDir, newFileName);
+
+
+  Jimp.read(filePath, (err, filePath) => {
+  if (err) throw err;
+    filePath
+    .resize(250, 250) // resize
+    .quality(60) // set JPEG quality
+    .greyscale() // set greyscale
+    .write(newFilePath); // save
+});
+  const newAvatarURL = `/avatars/${newFileName}`
+
+  const accsessToken = req.headers.authorization
+  
+  if (!accsessToken) {
+    return res.status(401
+              .json({message: "Refresh token is required"})
+    )
+  }
+
+  const splitToken = accsessToken.split(' ')[1]
+  const decodedToken = jwt.verify(splitToken, process.env.SECRET);
+  const {id} = decodedToken
+  console.log(id)
+
+   try {
+     const data = await updateUser(id, { avatarURL: newAvatarURL } );
+
+    if (data) {
+      res.status(200).json({message: `avatarURL: ${newAvatarURL}`});
+    } else {
+      res.status(404).json({ message: `Contact id = ${contactId} wasn't found` });
+    }
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+ }
+
 module.exports = {
     getAllContacts, 
     getContact,
@@ -398,5 +453,6 @@ module.exports = {
     refresh, 
     logout, 
     current,
-    page
+    page,
+    uploadAvatar
 }

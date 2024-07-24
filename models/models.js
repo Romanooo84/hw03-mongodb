@@ -44,6 +44,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  avatarURL: String,
 }, { timestamps: true });
 
 userSchema.methods.setPassword = async function (password) {
@@ -56,6 +57,10 @@ userSchema.methods.validatePassword = async function (password) {
 
 userSchema.methods.setToken = async function (token) {
   this.token = token
+}
+
+userSchema.methods.setAvatar = async function (avatarURL) {
+  this.avatarURL = avatarURL
 }
     
 const Contact = mongoose.model('contact', contactsSchema, 'contacts');

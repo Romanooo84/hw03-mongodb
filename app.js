@@ -4,9 +4,10 @@ const cors = require('cors')
 require('dotenv').config()
 const setJWTStrategy = require('./config/jwt')
 const authMiddleware = require ('./middleware/jwt.js')
-
 const contactsRouter = require('./routes/api/contacts')
 const authRouter = require('./routes/api/authRouter')
+
+const path = require('path')
 
 const app = express()
 
@@ -14,6 +15,11 @@ const corsOptions = {
   origin:[`https://www.google.pl`]
 }
 
+
+
+
+app.set('viev engine', 'ejs')
+app.use(express.static(path.resolve(__dirname,'./public')))
 app.use(logger('combined'))
 app.use(cors(corsOptions))
 app.use(express.json())
@@ -22,6 +28,9 @@ setJWTStrategy()
 
 app.use('/api/contacts', authMiddleware, contactsRouter)
 app.use('/api/users', authRouter)
+
+
+
  
 app.use((req, res) => {
   res.status(404).json({ message: `Not found - ${req.path}` })

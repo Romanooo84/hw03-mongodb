@@ -10,6 +10,10 @@ const fetchContact = (id) => {
     })
 }
 
+const fetchUsers = (verificationToken) => {
+    return Users.find({verificationToken: verificationToken}) 
+}
+
 const fetchCreateContact = ({ name, phone, email, favourite, owner }) => {
     return Contact.create({ name, phone, email, favourite, owner })
 }
@@ -42,5 +46,6 @@ module.exports = {
     fetchCreateContact,
     deleteContactById,
     updateContact, 
-    updateUser
+    updateUser,
+    fetchUsers
 }

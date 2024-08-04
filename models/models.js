@@ -44,6 +44,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  verify: {
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: {
+    type: String,
+  },
   avatarURL: String,
 }, { timestamps: true });
 
@@ -62,6 +69,14 @@ userSchema.methods.setToken = async function (token) {
 userSchema.methods.setAvatar = async function (avatarURL) {
   this.avatarURL = avatarURL
 }
+
+userSchema.methods.setVerificationToken = function (verificationToken) {
+  this.verificationToken = verificationToken;
+};
+
+userSchema.methods.setVerify = function (verify) {
+  this.verify = verify;
+};
     
 const Contact = mongoose.model('contact', contactsSchema, 'contacts');
 const Users = mongoose.model('User', userSchema, 'users');

@@ -1,13 +1,14 @@
 
-const { fetchContacts, fetchContact, fetchCreateContact, deleteContactById, updateContact, updateUser} = require('../services/services.js')
+const { fetchContacts, fetchContact, fetchCreateContact, deleteContactById, updateContact, updateUser, fetchUsers} = require('../services/services.js')
 const Joi = require('joi');
 const { Users, Contact } = require('../models/models.js')
 require('dotenv').config()
 const jwt = require('jsonwebtoken')
-const passport = require('passport');
 const gravatar = require('gravatar')
 const Jimp = require("jimp");
 const path = require('path');
+const { sendEmail } = require('./email')
+const { v4: idv4 } = require('uuid');
 
 
 const postSchema = Joi.object({
@@ -207,11 +208,20 @@ const signup = async (req, res, next) => {
       const url = gravatar.url(`${email}`, { s: '200', r: 'pg', d: '404' })
       console.log(url)
 
-        const newUser = new Users({ email });
-        await newUser.setPassword(password);
-        await newUser.setAvatar(url)
-        await newUser.save();
+      
 
+      const verificationToken = idv4()
+      const subject="User registration"
+      const html = `http://localhost:3000/api/users/verify/${verificationToken}`
+
+      const newUser = new Users({ email });
+      await newUser.setPassword(password);
+      await newUser.setAvatar(url)
+      newUser.setVerificationToken(verificationToken)
+      await newUser.save();
+
+      sendEmail(email, subject, html)
+      
       return res.status(201).json(
         {
           "user": {
@@ -238,6 +248,11 @@ const login = async (req, res, next) => {
     return res.status(401)
                .json({message: "User not found"})
   }
+  else if (user.verify !== true) {
+    return res.status(401)
+              .json({message: "User not verified"})
+  }
+  
 
   const isPasswordCorrect = await user.validatePassword(password)
 
@@ -439,7 +454,60 @@ const uploadAvatar = async (req, res, next) => {
     console.error(err);
     next(err);
   }
- }
+}
+ 
+const verification = async (req, res, next) => {
+
+  const verificationToken = req.params.verificationToken;
+    try {
+      const user = await Users.findOne({ verificationToken: verificationToken })
+        if (!user) {
+            res.status(400)
+                .json(`User was not found`)
+        }
+        else if (user.verify === true) {
+            res.status(400)
+                .json(`User was verified`)
+        }
+        else {
+          user.setVerify(true);
+          user.setVerificationToken(null)
+          await user.save();
+          res.json({ message: 'Verification successful'});
+        }
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+}
+
+const newVerificationEmail = async (req, res, next) => {
+  const { email} = req.body
+  console.log(email)
+
+  try {
+    const user = await Users.findOne({ email: email })
+    if (!user) {
+      res.status(400)
+        .json(`User was not found`)
+    }
+    else if (user.verify === true) {
+      res.status(400)
+        .json(`Verification has already been passed`)
+    }
+    else {
+      const subject="reverification process"
+      const html = `http://localhost:3000/api/users/verify/${user.verificationToken}`
+      sendEmail(email,subject, html)
+      res.json({message:'email sent'})
+    }
+  }
+  catch (err) {
+    console.error(err);
+    next(err);
+  }
+}
+  
 
 module.exports = {
     getAllContacts, 
@@ -454,5 +522,7 @@ module.exports = {
     logout, 
     current,
     page,
-    uploadAvatar
+    uploadAvatar,
+    verification,
+    newVerificationEmail
 }
